@@ -9,7 +9,7 @@ const FormSavedSelect = ({ options, onChange, value, label }: { options: { label
                 {label}
             </StyledLabel>
             <FormSelect onChange={onChange} value={value} style={{ flexBasis: '50%' }}>
-                <option value="">Select saved shipping</option>
+                <option value="">{label}</option>
                 {options.map((option) => (
                     <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
