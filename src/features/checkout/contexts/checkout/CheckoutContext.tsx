@@ -1,82 +1,80 @@
 import { createContext, useContext, useReducer } from 'react';
-import { AccountFormData, CheckoutData } from '../../types/form';
+import {
+    AccountFormData,
+    CheckoutData,
+    CheckoutFormData,
+} from '../../types/form';
+import { CheckoutAction, CheckoutContextType, CheckoutState } from '../../types/checkoutContext';
 
-interface CheckoutState {
-    checkoutData: Partial<CheckoutData>;
-    isAuthenticated: boolean;
-    dummyUserData: AccountFormData | null;
-    dummySelectedSavedShipping: string | null;
-    dummySelectedSavedPayment: string | null;
-}
-
-type CheckoutAction =
-    | { type: 'checkout/updateData'; payload: {step: keyof CheckoutData; data: any} }
-    | { type: 'checkout/setAuthenticated'; payload: boolean }
-    | { type: 'checkout/setDummyUserData'; payload: AccountFormData }
-    | { type: 'checkout/setDummySelectedSavedShipping'; payload: string }
-    | { type: 'checkout/setDummySelectedSavedPayment'; payload: string };
-
-const checkoutReducer = (state: CheckoutState, action: CheckoutAction): CheckoutState => {
+const checkoutReducer = (
+    state: CheckoutState,
+    action: CheckoutAction
+): CheckoutState => {
     switch (action.type) {
         case 'checkout/updateData':
             return {
                 ...state,
                 checkoutData: {
                     ...state.checkoutData,
-                    [action.payload.step]: action.payload.data
-                }
+                    [action.payload.step]: action.payload.data,
+                },
             };
         case 'checkout/setAuthenticated':
             return {
                 ...state,
-                isAuthenticated: action.payload
+                isAuthenticated: action.payload,
             };
         case 'checkout/setDummyUserData':
             return {
                 ...state,
-                dummyUserData: action.payload
+                dummyUserData: action.payload,
             };
         case 'checkout/setDummySelectedSavedShipping':
             return {
                 ...state,
-                dummySelectedSavedShipping: action.payload
+                dummySelectedSavedShipping: action.payload,
             };
         case 'checkout/setDummySelectedSavedPayment':
             return {
                 ...state,
-                dummySelectedSavedPayment: action.payload
+                dummySelectedSavedPayment: action.payload,
+            };
+        case 'checkout/setCurrentStep':
+            return {
+                ...state,
+                currentStep: action.payload,
             };
         default:
             return state;
     }
 };
 
-interface CheckoutContextType {
-    checkoutData: Partial<CheckoutData>;
-    isAuthenticated: boolean;
-    updateCheckoutData: (step: keyof CheckoutData, data: any) => void;
-    setAuthenticated: (value: boolean) => void;
-    setDummyUserData: (data: AccountFormData) => void;
-    dummyUserData: AccountFormData | null;
-    setDummySelectedSavedShipping: (data: string) => void;
-    setDummySelectedSavedPayment: (data: string) => void;
-    dummySelectedSavedShipping: string | null;
-    dummySelectedSavedPayment: string | null;
-}
+const initialState: CheckoutState = {
+    checkoutData: {},
+    isAuthenticated: false,
+    dummyUserData: null,
+    dummySelectedSavedShipping: null,
+    dummySelectedSavedPayment: null,
+    currentStep: 0,
+};
 
 const CheckoutContext = createContext<CheckoutContextType | null>(null);
 
-export function CheckoutProvider({ children }: { children: React.ReactNode }) {
-    const [state, dispatch] = useReducer(checkoutReducer, {
-        checkoutData: {},
-        isAuthenticated: false,
-        dummyUserData: null,
-        dummySelectedSavedShipping: null,
-        dummySelectedSavedPayment: null
-    });
+const CheckoutProvider = ({ children }: { children: React.ReactNode }) => {
+    const [{
+        checkoutData,
+        isAuthenticated,
+        dummyUserData,
+        dummySelectedSavedShipping,
+        dummySelectedSavedPayment,
+        currentStep
+    }, dispatch] = useReducer(checkoutReducer, initialState);
 
-    const updateCheckoutData = (step: keyof CheckoutData, data: any) => {
-        dispatch({ type: 'checkout/updateData', payload: {step, data} });
+    const updateCheckoutData = (
+        step: keyof CheckoutData,
+        data: CheckoutFormData
+    ) => {
+        dispatch({ type: 'checkout/updateData', payload: { step, data } });
     };
 
     const setAuthenticated = (value: boolean) => {
@@ -95,26 +93,41 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'checkout/setDummySelectedSavedPayment', payload: data });
     };
 
+    const setCurrentStep = (step: number): void => {
+        dispatch({ type: 'checkout/setCurrentStep', payload: step });
+    };
+
     return (
-        <CheckoutContext.Provider value={{
-            checkoutData: state.checkoutData,
-            isAuthenticated: state.isAuthenticated,
-            updateCheckoutData,
-            setAuthenticated,
-            setDummyUserData,
-            dummyUserData: state.dummyUserData,
-            setDummySelectedSavedShipping,
-            setDummySelectedSavedPayment,
-            dummySelectedSavedShipping: state.dummySelectedSavedShipping,
-            dummySelectedSavedPayment: state.dummySelectedSavedPayment
-        }}>
+        <CheckoutContext.Provider
+            value={{
+                checkoutData,
+                updateCheckoutData,
+                isAuthenticated,
+                setAuthenticated,
+                dummyUserData,
+                setDummyUserData,
+                dummySelectedSavedShipping,
+                setDummySelectedSavedShipping,
+                dummySelectedSavedPayment,
+                setDummySelectedSavedPayment,
+                currentStep,
+                setCurrentStep,
+            }}
+        >
             {children}
         </CheckoutContext.Provider>
     );
 }
 
-export const useCheckout = () => {
+const useCheckout = () => {
     const context = useContext(CheckoutContext);
-    if (!context) throw new Error('useCheckout must be used within CheckoutProvider');
+    if (!context)
+        throw new Error('useCheckout must be used within CheckoutProvider');
     return context;
 };
+
+export {
+    CheckoutContext,
+    CheckoutProvider,
+    useCheckout
+}

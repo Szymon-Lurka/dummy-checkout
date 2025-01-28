@@ -1,21 +1,28 @@
 import React from 'react';
 import IndicatorCircle from '../../../../../assets/icons/indicator-circle.svg';
-import { StepContainer, StepItem, StepTitle, ConnectorWrapper, ConnectorPart, CheckIcon } from './StepIndicator.styles.tsx';
-export interface Step {
-    key: string;
-    title: string;
-}
+import {
+    CheckIcon,
+    ConnectorPart,
+    ConnectorWrapper,
+    StepContainer,
+    StepItem,
+    StepTitle,
+} from './StepIndicator.styles.tsx';
+import { useCheckout } from '../../../contexts/checkout/CheckoutContext.tsx';
+import { Step } from '../../checkoutform/CheckoutForm.tsx';
 
 interface Props {
-    steps: Step[];
-    currentStep: number;
-    handleStepClick?: (index: number) => void;
+    steps: readonly Step[];
 }
 
-function StepIndicator({ steps, currentStep, handleStepClick }: Props) {
+function StepIndicator({ steps }: Props) {
+    const { setCurrentStep, currentStep } = useCheckout();
+
     const handleClick = (index: number) => {
-        handleStepClick?.(index);
-    }
+        if (index < currentStep) {
+            setCurrentStep(index);
+        }
+    };
 
     return (
         <StepContainer>
@@ -27,19 +34,17 @@ function StepIndicator({ steps, currentStep, handleStepClick }: Props) {
                 return (
                     <React.Fragment key={step.key}>
                         <StepItem onClick={() => handleClick(index)}>
-                            <StepTitle $isBefore={isBefore} $isActiveOrCompleted={isActiveOrCompleted}>
+                            <StepTitle
+                                $isBefore={isBefore}
+                                $isActiveOrCompleted={isActiveOrCompleted}
+                            >
                                 {step.title}
                             </StepTitle>
                         </StepItem>
                         {index < steps.length - 1 && (
                             <ConnectorWrapper>
                                 <ConnectorPart $isCompleted={isCompleted} />
-                                {isCompleted && (
-                                    <CheckIcon
-                                        src={IndicatorCircle}
-                                        alt=""
-                                    />
-                                )}
+                                {isCompleted && <CheckIcon src={IndicatorCircle} alt="" />}
                                 <ConnectorPart $isCompleted={isCompleted} />
                             </ConnectorWrapper>
                         )}
